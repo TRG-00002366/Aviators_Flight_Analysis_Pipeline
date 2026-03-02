@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "geodistpy>=1.1.1",
     "pyopensky>=2.16",
+    "pyspark>=4.1.1",
     "requests>=2.32.5",
 ]

@@ -1,0 +1,9 @@
+Flight Event:
+    - Flight Number
+    - Aircraft Type
+    - Bearing
+    - Location 
+    - Altitude 
+    - Speed
+    - Squawk Code
+    - Timestamp
