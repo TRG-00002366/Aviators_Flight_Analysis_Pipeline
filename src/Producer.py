@@ -5,9 +5,21 @@ events periodically.
 """
 
 import threading
+import queue
 from datetime import datetime
 
-THREAD_COUNT = 2
+PARTIES = 2
 
 TIMESTAMP = datetime.now()
+
+EMIT_BARRIER = threading.Barrier(parties=PARTIES)
+
+QUEUE = queue.Queue()
+
+def task():
+    while True:
+        print("hello")
+        EMIT_BARRIER.wait()
+
+threads = [threading.Thread(target=task) for i in range(0,2)]
 
