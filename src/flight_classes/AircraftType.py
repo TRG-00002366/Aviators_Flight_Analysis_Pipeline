@@ -1,7 +1,9 @@
 """
 This module defines the enum type for an Aircraft - the aircraft type, that is.
 """
+
 from enum import Enum
+
 
 class AircraftType(Enum):
     """

@@ -1,17 +1,13 @@
-from dataclasses import dataclass
-
-from FlightEvent import FlightEvent
-from FlightSector import FlightSector
-from AircraftType import AircraftType
-from Point import Point
-from datetime import datetime, timedelta
-from geodistpy import geodist, interpolate
-import random
 import math
+import random
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
-
-
-
+from .AircraftType import AircraftType
+from .FlightEvent import FlightEvent
+from .FlightSector import FlightSector
+from geodistpy import geodist, interpolate
+from .Point import Point
 
 
 @dataclass
@@ -63,7 +59,7 @@ class Flight:
             math.cos(lat1) * math.sin(lat2)
             - math.sin(lat1) * math.cos(lat2) * math.cos(long2 - long1),
         )
-        
+
         bearing: float = round((math.degrees(bearing_rad) + 360) % 360, 2)
 
         num_points: int = math.floor(
@@ -78,8 +74,8 @@ class Flight:
         )
 
         points: list[Point] = [
-            Point(long, lat)
-            for (long, lat) in interpolate(
+            Point(longitude=long, latitude=lat)
+            for (lat, long) in interpolate(
                 (origin_point.latitude, origin_point.longitude),
                 (final_point.latitude, final_point.longitude),
                 num_points,
@@ -89,22 +85,22 @@ class Flight:
         elevation: int = random.randrange(30000, 40000, 1000)
         flight_events = [
             FlightEvent(
-                flight_number = flight_number,
-                aircraft_type = aircraft_type,
-                bearing = bearing,
-                location = point,
-                elevation = elevation,
-                ground_speed = speed,
-                timestamp = initial_timestamp + timedelta(seconds=t)
+                flight_number=flight_number,
+                aircraft_type=aircraft_type,
+                bearing=bearing,
+                location=point,
+                elevation=elevation,
+                ground_speed=speed,
+                timestamp=initial_timestamp + timedelta(seconds=t),
             )
             for t, point in enumerate(points)
         ]
-        
+
         return Flight(
             origin_point=origin_point,
             final_point=final_point,
             aircraft_type=aircraft_type,
             flight_events=flight_events,
             speed=speed,
-            flight_number=flight_number
+            flight_number=flight_number,
         )

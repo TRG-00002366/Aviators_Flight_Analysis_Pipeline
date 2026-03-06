@@ -5,10 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "folium>=0.20.0",
     "geodistpy>=1.1.1",
+    "geopandas>=1.1.2",
+    "matplotlib>=3.10.8",
     "pyopensky>=2.16",
     "pyspark>=4.1.1",
     "requests>=2.32.5",
+    "shapely>=2.1.2",
 ]
 
 [dependency-groups]
