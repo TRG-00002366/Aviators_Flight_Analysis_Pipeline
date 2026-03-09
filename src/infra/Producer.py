@@ -5,32 +5,41 @@ It follows an async model.
 
 import asyncio
 import uuid
+import logging
 from datetime import datetime
 
-from src.flight_classes import Flight
+from src.domain.flight import Flight
+from src.additionals.logger import LOGGER_NAME
+
+logger = logging.getLogger(LOGGER_NAME)
 
 async def flight_emitter_task():
-    print("Hey, I'm a task and I'm starting some work!")
+    logger.info("Beginning flight creation and emission")
     flight: Flight = Flight.new_random_flight(datetime.now(), str(uuid.uuid1(node=None, clock_seq=None)))
+    logger.info("New random flight created, beginning emission...")
     for event in flight.flight_events:
-        print(f"Flight: {event.flight_number}")
+        # For now, we'll just log as a sign we've emitted
+        logger.info(f"Emitted following flight event: {event.flight_number} at point: {event.location}")
         await asyncio.sleep(1)
 
 async def a_main():
-    print("here")
+    logger.info("Starting data generation...")
     tasks = set()
     N = 2
     for i in range(0, N):
+        logger.debug("Creating and adding async tasks to tasks")
         task = asyncio.create_task(flight_emitter_task())
         tasks.add(task)
         task.add_done_callback(tasks.discard)
-    print("here - starting loop")
+    logger.info("Tasks added")
     while True:
         if len(tasks) < N:
-           for i in range(0, N - len(tasks)):
+           logger.info("A task has finished, adding new task for flight generation and emission")
+           for i in range(N - len(tasks)):
                task = asyncio.create_task(flight_emitter_task())
                tasks.add(task)
                task.add_done_callback(tasks.discard)
+               logger.info("Task added and started")
         await asyncio.sleep(0.1)
                
 asyncio.run(a_main())

@@ -9,6 +9,7 @@ dependencies = [
     "geodistpy>=1.1.1",
     "geopandas>=1.1.2",
     "matplotlib>=3.10.8",
+    "pydantic>=2.12.5",
     "pyopensky>=2.16",
     "pyspark>=4.1.1",
     "requests>=2.32.5",

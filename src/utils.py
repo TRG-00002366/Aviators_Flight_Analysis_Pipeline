@@ -4,7 +4,7 @@ A suite of helper functions used across the codebase.
 
 import math
 
-from src.geo import Point
+from src.domain.geo import Point
 
 def calculate_bearing(origin_point: Point, final_point: Point) -> float:
     """

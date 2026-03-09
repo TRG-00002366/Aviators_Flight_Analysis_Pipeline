@@ -2,15 +2,17 @@
 The FlightEvent module defines the schema for an individual Flight Event as a dataclass.
 """
 
-from dataclasses import dataclass
 from datetime import datetime
+import logging
+from src.additionals.logger import LOGGER_NAME
 
-from .AircraftType import AircraftType
-from src.geo import Point
+from .aircraft_type import AircraftType
+from .geo import Point
+from pydantic import BaseModel
 
+logger = logging.getLogger(LOGGER_NAME)
 
-@dataclass
-class FlightEvent:
+class FlightEvent(BaseModel):
     """
     Dataclass for a Flight Event
 
@@ -34,14 +36,6 @@ class FlightEvent:
     timestamp: datetime
     
     def to_dict(self):
-        return {
-           "aircraft_type": self.aircraft_type,
-           "bearing": self.bearing,
-           "location": {
-               "latitude": self.location.latitude,
-               "longitude": self.location.longitude
-           },
-           "elevation": self.elevation,
-           "ground_speed": self.ground_speed,
-           "timestamp": self.timestamp
-        }
+        flight_event = self.model_dump_json()
+        logger.info(f"Converting Flight to Dictionary for the following flight: {self.flight_number}")
+        return flight_event
