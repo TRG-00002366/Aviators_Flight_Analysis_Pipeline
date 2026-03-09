@@ -2,4 +2,5 @@ from .AircraftType import AircraftType
 from .Flight import Flight
 from .FlightEvent import FlightEvent
 from .FlightSector import FlightSector
-from .Point import Point
+
+__all__ = ["AircraftType", "Flight", "FlightEvent", "FlightSector"]
