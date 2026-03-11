@@ -128,6 +128,7 @@ class Flight(BaseModel):
         logger.info(
             "Flight Events generated, proceeding to instantiate and return new Flight"
         )
+        
         return cls(
             origin_point=origin_point,
             final_point=final_point,
