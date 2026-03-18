@@ -1,16 +1,34 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, countDistinct
+from pyspark.sql.types import (FloatType, StringType, StructField, StructType,
+                               TimestampType)
+from pyspark.sql.functions import from_json
 
+spark = (
+    SparkSession.builder.appName("spark_streaming_consumer")
+    .master("local[*]")
+    .config("--packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.1")
+    .getOrCreate()
+)
 
-spark = SparkSession.builder \
-    .appName("spark_streaming_consumer") \
-    .master("local[*]") \
-    .config(
-        "spark.jars.packages",
-        "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0"  # <- adjust Scala version if needed
-    ).getOrCreate()
-
-
+schema = StructType(
+    [
+        StructField("flight_number", StringType()),
+        StructField("aircraft_type", StringType()),
+        StructField("bearing", FloatType()),
+        StructField(
+            "location",
+            StructType(
+                [
+                    StructField("longitude", FloatType()),
+                    StructField("latitude", FloatType()),
+                ]
+            ),
+        ),
+        StructField("elevation", FloatType()),
+        StructField("ground_speed", FloatType()),
+        StructField("timestamp", TimestampType()),
+    ]
+)
 # Read from Kafka
 df = (
     spark.readStream
@@ -21,24 +39,16 @@ df = (
     .load()
 )
 
-# Kafka values are bytes, decode them (assuming JSON with flight_id)
-from pyspark.sql.functions import from_json, approxCountDistinct
-from pyspark.sql.types import StructType, StringType
+parsed_df = df.selectExpr(
+    "CAST(key AS STRING)", "CAST(value AS STRING)"
+).select(from_json("value", schema).alias("data")).select("data.*")
 
-schema = StructType().add("flight_number", StringType())
-
-json_df = df.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
-
-# Count distinct flight_ids (active flights) continuously
-active_flights = json_df.groupBy().agg(approxCountDistinct("flight_number").alias("active_flights"))
-
-# Write live stats to console every 5 seconds
-query = (
-    active_flights.writeStream
-    .outputMode("complete")  # needed for aggregation
-    .format("console")
-    .trigger(processingTime="5 seconds")
-    .start()
+# Write to parquet
+write_to_parquet = (
+    parsed_df.writeStream.outputMode("append")
+    .format("parquet")
+    .option("checkpointLocation", "checkpoint")
+    .start("data/flight_events/")
 )
 
-query.awaitTermination()
+write_to_parquet.awaitTermination()
