@@ -1,8 +1,27 @@
 version: '3.8'
 
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.7.3
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+    - AIRFLOW__CORE__FERNET_KEY=your-fernet-key-here
+    - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    - AIRFLOW__WEBSERVER__SECRET_KEY=your-secret-key-here
+    - _PIP_ADDITIONAL_DEPENDENCIES=pyspark==3.4.1
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    - ./config:/opt/airflow/config
+    - .:/opt/airflow/project
+  # Running as root is necessary to allow apt-get install for Java
+  user: "0:0"
+  depends_on:
+    postgres:
+      condition: service_healthy
+
 services:
-  # ZooKeeper - Cluster coordinator (legacy mode)
-  # Note: For Kafka 3.0+, KRaft mode can be used instead
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper
@@ -18,7 +37,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Kafka Broker
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     hostname: kafka
@@ -45,20 +63,78 @@ services:
       timeout: 10s
       retries: 5
 
-  # Kafka UI - Optional but helpful for visualization
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
       - kafka
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
-# Network configuration
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        # Initializing the DB and User
+        airflow db init
+        airflow users create \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com \
+          --password admin
+    restart: on-failure
+
+  airflow-webserver:
+    <<: *airflow-common
+    # Added Java installation before starting the webserver
+    entrypoint: /bin/bash
+    command: -c "apt-get update && apt-get install -y default-jdk && airflow webserver"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  airflow-scheduler:
+    <<: *airflow-common
+    # The Scheduler is what actually triggers the Spark tasks; it MUST have Java
+    entrypoint: /bin/bash
+    command: -c "apt-get update && apt-get install -y default-jdk && airflow scheduler"
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname $(hostname)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres-db-volume:
+
 networks:
   default:
     name: kafka-network

@@ -14,10 +14,10 @@ class FlightSector(BaseModel):
     # south: float = 37.0
     # east: float = -87.5
     # west: float = -91.5
-    north: ClassVar[float] = 42.5
+    north: ClassVar[float] = 38
     south: ClassVar[float] = 37.0
     east: ClassVar[float] = -87.5
-    west: ClassVar[float] = -91.5
+    west: ClassVar[float] = -88.5
     
     @classmethod
     def gen_random_point_boundary(cls, boundary_choice: str):
