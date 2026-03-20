@@ -6,7 +6,7 @@ from pyspark.sql.functions import from_json
 spark = (
     SparkSession.builder.appName("spark_streaming_consumer")
     .master("local[*]")
-    .config("--packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.1")
+    .config("--packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0")
     .getOrCreate()
 )
 
@@ -47,8 +47,8 @@ parsed_df = df.selectExpr(
 write_to_parquet = (
     parsed_df.writeStream.outputMode("append")
     .format("parquet")
-    .option("checkpointLocation", "checkpoint")
-    .start("data/flight_events/")
+    .option("checkpointLocation", "/opt/airflow/data/checkpoint")
+    .start("/opt/airflow/data/flight_events/")
 )
 
 write_to_parquet.awaitTermination()
