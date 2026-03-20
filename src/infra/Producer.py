@@ -34,7 +34,7 @@ def create_task(producer: AIOKafkaProducer, tasks: set) -> None:
 
 async def main():
     logger.info("Producer connecting...")
-    producer: AIOKafkaProducer = AIOKafkaProducer(bootstrap_servers='localhost:9092')
+    producer: AIOKafkaProducer = AIOKafkaProducer(bootstrap_servers='kafka:9092')
     await producer.start()
     logger.info("Producer connected")
 
