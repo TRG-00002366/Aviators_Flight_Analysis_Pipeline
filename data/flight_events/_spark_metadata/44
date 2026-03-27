@@ -1,5 +1,0 @@
-v1
-{"path":"file:///mounted-data/data/flight_events/part-00000-7c325d58-74d3-4479-b724-95e9f9830398-c000.snappy.parquet","size":2535,"isDir":false,"modificationTime":1774639215506,"blockReplication":1,"blockSize":33554432,"action":"add"}
-{"path":"file:///mounted-data/data/flight_events/part-00001-d13d867c-2874-4dfe-9a49-880d76ffcf8b-c000.snappy.parquet","size":2776,"isDir":false,"modificationTime":1774639215517,"blockReplication":1,"blockSize":33554432,"action":"add"}
-{"path":"file:///mounted-data/data/flight_events/part-00002-61fd2c3b-a69f-485c-a925-308aad8f8f02-c000.snappy.parquet","size":2695,"isDir":false,"modificationTime":1774639215506,"blockReplication":1,"blockSize":33554432,"action":"add"}
-{"path":"file:///mounted-data/data/flight_events/part-00003-8ce872e0-ec8f-4a21-a903-56e22ebae6a0-c000.snappy.parquet","size":2883,"isDir":false,"modificationTime":1774639215605,"blockReplication":1,"blockSize":33554432,"action":"add"}

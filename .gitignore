@@ -208,3 +208,6 @@ __marimo__/
 
 # AMAZON
 .bucket
+
+# DON'T INCLUDE THE DATA DIRECTORY 
+data/
