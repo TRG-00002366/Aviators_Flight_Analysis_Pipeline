@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiokafka>=0.13.0",
+    "apache-airflow>=3.1.8",
     "folium>=0.20.0",
     "geodistpy>=1.1.1",
     "geopandas>=1.1.2",

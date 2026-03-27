@@ -1,5 +1,6 @@
 version: '3.8'
 
+
 services:
   # =================================================
   # =                   Kafka                       =
@@ -73,6 +74,8 @@ services:
     ports:
       - '8081:8080'
       - '7077:7077'
+    volumes:
+      - ./:/mounted-data
 
   spark-worker:
     image: apache/spark:3.5.0
@@ -85,6 +88,9 @@ services:
       - SPARK_MASTER_URL=spark://spark:7077
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark:7077
+    volumes:
+      - ./:/mounted-data
+
 
   # ==============================================
   # =               Main Services                =
@@ -107,13 +113,14 @@ services:
 
   consumer:
     build: .
-    command: [
-      "uv", 
-      "run", 
-      "spark-submit", 
-      "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0", 
-      "src/infra/spark_streaming_consumer.py"
-    ]
+    volumes:
+      - ./:/mounted-data
+    command: >
+      bash -c "
+        mkdir -p /mounted-data/data/flight_events /mounted-data/data/checkpoint &&
+        chmod -R 777 /mounted-data/data &&
+        uv run spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 src/infra/spark_streaming_consumer.py
+      "
     depends_on:
       setup-kafka: 
         condition: service_completed_successfully
