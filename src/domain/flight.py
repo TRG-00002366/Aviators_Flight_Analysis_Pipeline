@@ -22,6 +22,23 @@ from .flight_sector import FlightSector
 
 logger = logging.getLogger(LOGGER_NAME)
 
+class FlightCounter():
+    model_config = ConfigDict(use_enum_values=True)
+    airline_list = ["AS", "AA", "AC", "AM", "CO", "DL", "FX", "HA", "NW", "PO", "SW", "UA", "UPS", "VIR"]
+
+    airline_flightNum = {
+        code: 1 
+        for code in airline_list
+    } 
+
+    def new_flight_number(self) -> str:
+        airline: str = random.choice(self.airline_list)
+        airline_num: str = f"{airline}{self.airline_flightNum[airline]}" 
+        self.airline_flightNum[airline] += 1
+        return airline_num
+   
+fc = FlightCounter() 
+
 class Flight(BaseModel):
     """
     Dataclass representing a flight.
@@ -34,7 +51,6 @@ class Flight(BaseModel):
         flight_events (list[FlightEvent]): Events associated with the flight.
         speed_kts (float): Cruise speed in **kts** (knots).
     """
-    model_config = ConfigDict(use_enum_values=True)
     
     origin_point: Point
     final_point: Point
@@ -43,8 +59,9 @@ class Flight(BaseModel):
     speed_kts: float
     flight_number: str
 
+
     @classmethod
-    def new_random_flight(cls, initial_timestamp: datetime, flight_number: str):
+    def new_random_flight(cls, initial_timestamp: datetime):
         """
         Generates and returns a new random `Flight` instance.
 
@@ -111,6 +128,8 @@ class Flight(BaseModel):
         logger.info(
             f"Elevation choses: {elevation}"
         )
+       
+        flight_number = fc.new_flight_number()
         
         flight_events: Generator[FlightEvent, None, None] = (
             FlightEvent(
