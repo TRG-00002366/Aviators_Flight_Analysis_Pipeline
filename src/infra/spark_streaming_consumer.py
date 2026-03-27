@@ -4,7 +4,7 @@ from pyspark.sql.functions import col, countDistinct
 
 spark = SparkSession.builder \
     .appName("spark_streaming_consumer") \
-    .master("local[*]") \
+    .master("spark://spark:7077") \
     .config(
         "spark.jars.packages",
         "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0"  # <- adjust Scala version if needed
@@ -15,7 +15,7 @@ spark = SparkSession.builder \
 df = (
     spark.readStream
     .format("kafka")
-    .option("kafka.bootstrap.servers", "0.0.0.0:9092")
+    .option("kafka.bootstrap.servers", "kafka:29092")
     .option("subscribe", "flight_events")
     .option("startingOffsets", "earliest")
     .load()

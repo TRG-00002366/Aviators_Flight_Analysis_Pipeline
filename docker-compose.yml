@@ -1,8 +1,10 @@
 version: '3.8'
 
 services:
-  # ZooKeeper - Cluster coordinator (legacy mode)
-  # Note: For Kafka 3.0+, KRaft mode can be used instead
+  # =================================================
+  # =                   Kafka                       =
+  # =================================================
+  # ZooKeeper - Cluster coordinator
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper
@@ -13,7 +15,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      test: [ "CMD", "nc", "-z", "localhost", "2181" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,12 +42,12 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
       interval: 10s
       timeout: 10s
       retries: 5
 
-  # Kafka UI - Optional but helpful for visualization
+  # Kafka UI - Web interface for monitoring
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -58,7 +60,68 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
-# Network configuration
+  # ==============================================
+  # =                 Spark                      =
+  # ==============================================
+  spark:
+    image: apache/spark:3.5.0
+    container_name: spark-master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - '8081:8080'
+      - '7077:7077'
+
+  spark-worker:
+    image: apache/spark:3.5.0
+    container_name: spark-worker
+    depends_on:
+      spark:
+        condition: service_started
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark:7077
+
+  # ==============================================
+  # =               Main Services                =
+  # ==============================================
+  setup-kafka:
+    build: .
+    command: ["uv", "run", "python", "-m", "src.infra.setup_kafka"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  producer:
+    build: .
+    command: ["uv", "run", "python", "-m", "src.infra.Producer"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+      setup-kafka:
+        condition: service_completed_successfully
+
+  consumer:
+    build: .
+    command: [
+      "uv", 
+      "run", 
+      "spark-submit", 
+      "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0", 
+      "src/infra/spark_streaming_consumer.py"
+    ]
+    depends_on:
+      setup-kafka: 
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+      producer: 
+        condition: service_started
+
 networks:
   default:
     name: kafka-network
