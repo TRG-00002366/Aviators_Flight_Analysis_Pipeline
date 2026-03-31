@@ -211,3 +211,7 @@ __marimo__/
 
 # DON'T INCLUDE THE DATA DIRECTORY 
 data/
+
+# DON'T PUT THE RSA KEYS MAN
+rsa_key.p8
+rsa_key.pub
