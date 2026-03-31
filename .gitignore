@@ -215,3 +215,6 @@ data/
 # DON'T PUT THE RSA KEYS MAN
 rsa_key.p8
 rsa_key.pub
+
+# profile
+profile.json
